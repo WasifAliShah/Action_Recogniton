@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Action Recognition Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">CNN + LSTM · REST API</p>
+          <h1>Action Recognition Playground</h1>
+          <p class="lede">Upload a video clip and the backend will predict the action. Built with FastAPI and a CNN+LSTM pipeline trained on HMDB51.</p>
+        </div>
+        <div class="badge">Demo</div>
+      </header>
+
+      <section class="panel">
+        <form id="upload-form" class="form">
+          <div class="field">
+            <label for="api-base-input">API base</label>
+            <div class="input-row">
+              <input id="api-base-input" type="url" value="http://localhost:8000" />
+              <span id="api-status" class="status status--unknown">?</span>
+            </div>
+          </div>
+          <label class="drop" for="video-input">
+            <span class="drop__title">Drop a video or click to select</span>
+            <span class="drop__hint">MP4, WebM, or MOV · extracts 16 frames · keeps data local</span>
+            <input id="video-input" type="file" accept="video/*" required />
+          </label>
+          <button type="submit" class="cta">Predict</button>
+          <p id="error-msg" class="error" hidden></p>
+        </form>
+      </section>
+
+      <section class="panel grid" id="results" hidden>
+        <div class="card">
+          <h2>Prediction</h2>
+          <p class="pill" id="prediction-label">—</p>
+          <div id="score-list"></div>
+        </div>
+        <div class="card">
+          <h2>Sample Frame</h2>
+          <div class="preview" id="preview">
+            <p class="muted">A sample frame from your video will appear here.</p>
+          </div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <p>API base: <code id="api-base">http://localhost:8000</code></p>
+        <p class="muted">This demo uses randomly initialized weights; replace them with trained weights for real results.</p>
+      </footer>
+    </main>
+    <script src="script.js" defer></script>
+  </body>
+</html>

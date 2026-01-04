@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+*.log
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+.ipynb_checkpoints/
+
+# Build/output
+build/
+dist/
+*.bak
+
+# Weights and checkpoints
+backend/weights/*.pt
+*.pth
+*.ckpt
+
+# Data and datasets (avoid committing large assets)
+datasets/
+HMDB51/
+HMDB51_balanced/
+data_synth/
+/kaggle/input/
+/kaggle/working/
+
+# Frontend static server cache
+node_modules/
