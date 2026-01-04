@@ -130,11 +130,3 @@ Open **[http://localhost:5173](http://localhost:5173)** and set the API base to 
 
   * Default: `backend/weights/best_cnn_lstm.pth`
   * Override using `MODEL_WEIGHTS_PATH` environment variable if needed
-
----
-
-## Notes
-
-* Although the model includes an LSTM, **single-image inference** works by passing a sequence length of 1.
-* The TorchScript model is not required for inference but is included for experimentation or deployment reference.
-* The training script is provided for reproducibility and experimentation.
