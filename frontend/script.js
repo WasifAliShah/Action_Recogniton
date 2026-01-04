@@ -1,6 +1,6 @@
 (() => {
   const form = document.getElementById("upload-form");
-  const fileInput = document.getElementById("video-input");
+  const fileInput = document.getElementById("image-input");
   const results = document.getElementById("results");
   const labelEl = document.getElementById("prediction-label");
   const scoreList = document.getElementById("score-list");
@@ -40,22 +40,13 @@
       applyApiBase(apiBase);
       localStorage.setItem("apiBase", apiBase);
 
-      // Extract frames from video
-      const frames = await extractFramesFromVideo(file, 16);
-      if (!frames || frames.length === 0) {
-        throw new Error("Could not extract frames from video");
-      }
+      // Show image preview
+      showImage(file);
 
-      // Show a sample frame
-      showSampleFrame(frames[0]);
-
-      // Send frames to backend
+      // Send image to backend
       const data = new FormData();
-      frames.forEach((frameBlob, idx) => {
-        data.append("frames", frameBlob, `frame_${idx}.jpg`);
-      });
-
-      const res = await fetch(`${apiBase}/predict`, {
+      data.append("file", file);
+      const res = await fetch(`${apiBase}/predict_image`, {
         method: "POST",
         body: data,
       });
@@ -67,60 +58,16 @@
       renderPrediction(payload);
       results.hidden = false;
     } catch (err) {
-      showError(err.message || "Failed to process video");
+      showError(err.message || "Failed to process image");
     } finally {
       setLoading(false);
     }
   });
 
-  async function extractFramesFromVideo(file, numFrames = 16) {
-    return new Promise((resolve, reject) => {
-      const video = document.createElement("video");
-      video.preload = "metadata";
-      video.onloadedmetadata = () => {
-        const duration = video.duration;
-        const step = duration / numFrames;
-        const frames = [];
-        let framesExtracted = 0;
-
-        const canvas = document.createElement("canvas");
-        canvas.width = 128;
-        canvas.height = 128;
-        const ctx = canvas.getContext("2d");
-
-        const extractFrame = (time) => {
-          video.currentTime = time;
-        };
-
-        video.onseeked = () => {
-          ctx.drawImage(video, 0, 0, 128, 128);
-          canvas.toBlob(
-            (blob) => {
-              if (blob) frames.push(blob);
-              framesExtracted++;
-              if (framesExtracted < numFrames) {
-                extractFrame((framesExtracted) * step);
-              } else {
-                video.pause();
-                resolve(frames);
-              }
-            },
-            "image/jpeg",
-            0.8
-          );
-        };
-
-        extractFrame(0);
-      };
-      video.onerror = () => reject(new Error("Failed to load video"));
-      video.src = URL.createObjectURL(file);
-    });
-  }
-
-  function showSampleFrame(frameBlob) {
-    const url = URL.createObjectURL(frameBlob);
+  function showImage(file) {
+    const url = URL.createObjectURL(file);
     const img = document.createElement("img");
-    img.alt = "Sample frame";
+    img.alt = "Uploaded image";
     img.src = url;
     img.style.maxWidth = "100%";
     preview.innerHTML = "";

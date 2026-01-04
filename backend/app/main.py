@@ -37,11 +37,48 @@ def labels() -> Dict[str, list[str]]:
     return {"labels": model.class_names}
 
 
+@app.post("/predict_image")
+async def predict_image(file: UploadFile = File(...)) -> JSONResponse:
+    """Accept a single image and predict the action (for image-trained models)."""
+    if file.content_type is None or not file.content_type.startswith("image"):
+        raise HTTPException(status_code=400, detail=f"Invalid image file type: {file.content_type}")
+
+    try:
+        file_bytes = await file.read()
+        image = Image.open(io.BytesIO(file_bytes)).convert("RGB")
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail=f"Invalid image data: {exc}") from exc
+
+    model = get_model()
+    label, score, scores = model.predict(image)
+
+    annotated = _annotate_image(image, label, score)
+    encoded = _encode_image(annotated)
+
+    note = (
+        f"Model weights loaded from {model.weights_path}" if model.weights_loaded else "Model is randomly initialized; replace weights for real predictions."
+    )
+
+    payload = {
+        "label": label,
+        "score": round(score, 4),
+        "scores": {k: round(v, 4) for k, v in scores.items()},
+        "annotated_image_base64": encoded,
+        "note": note,
+    }
+    return JSONResponse(payload)
+
+
 @app.post("/predict")
 async def predict(frames: list[UploadFile] = File(...)) -> JSONResponse:
-    """Accept 16 frame images extracted from video and predict action."""
+    """Accept frames from a video; if a single image is provided, fallback to image prediction."""
     if len(frames) == 0:
         raise HTTPException(status_code=400, detail="No frames provided.")
+
+    # Single image: delegate to image endpoint for image-only models
+    if len(frames) == 1:
+        return await predict_image(file=frames[0])
+
     if len(frames) < 8:
         raise HTTPException(status_code=400, detail=f"Expected at least 8 frames, got {len(frames)}.")
 
@@ -59,7 +96,6 @@ async def predict(frames: list[UploadFile] = File(...)) -> JSONResponse:
     model = get_model()
     label, score, scores = model.predict_sequence(frame_images)
 
-    # Use first frame for preview
     preview = frame_images[0].copy()
     annotated = _annotate_image(preview, label, score)
     encoded = _encode_image(annotated)

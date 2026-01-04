@@ -15,7 +15,7 @@
         <div>
           <p class="eyebrow">CNN + LSTM · REST API</p>
           <h1>Action Recognition Playground</h1>
-          <p class="lede">Upload a video clip and the backend will predict the action. Built with FastAPI and a CNN+LSTM pipeline trained on HMDB51.</p>
+          <p class="lede">Upload an image and the backend will predict the action. Built with FastAPI and a CNN+LSTM pipeline trained on Stanford-40 dataset.</p>
         </div>
         <div class="badge">Demo</div>
       </header>
@@ -29,10 +29,10 @@
               <span id="api-status" class="status status--unknown">?</span>
             </div>
           </div>
-          <label class="drop" for="video-input">
-            <span class="drop__title">Drop a video or click to select</span>
-            <span class="drop__hint">MP4, WebM, or MOV · extracts 16 frames · keeps data local</span>
-            <input id="video-input" type="file" accept="video/*" required />
+          <label class="drop" for="image-input">
+            <span class="drop__title">Drop an image or click to select</span>
+            <span class="drop__hint">JPG, PNG, or other image formats · data stays local</span>
+            <input id="image-input" type="file" accept="image/*" required />
           </label>
           <button type="submit" class="cta">Predict</button>
           <p id="error-msg" class="error" hidden></p>
@@ -46,9 +46,9 @@
           <div id="score-list"></div>
         </div>
         <div class="card">
-          <h2>Sample Frame</h2>
+          <h2>Preview</h2>
           <div class="preview" id="preview">
-            <p class="muted">A sample frame from your video will appear here.</p>
+            <p class="muted">Your uploaded image will appear here.</p>
           </div>
         </div>
       </section>
