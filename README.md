@@ -4,32 +4,65 @@ Image-based action recognition using a ResNet50 + LSTM model trained on the **St
 
 ## Overview
 
-- **Model:** ResNet50 (frozen) encoder + LSTM (2048->512) + Linear head
-- **Dataset:** Stanford-40 Actions (40 classes)
-- **Input:** Single RGB image (224x224 resize + ImageNet normalization)
-- **Output:** Predicted action label with confidence scores and an annotated preview
-- **APIs:** `/health`, `/labels`, `/predict_image` (single image); `/predict` also accepts sequences but routes to single-image flow when only one frame is provided
+* **Model:** ResNet50 (frozen) encoder + LSTM (2048→512) + Linear head
+* **Dataset:** Stanford-40 Actions (40 classes)
+* **Input:** Single RGB image (224×224 resize + ImageNet normalization)
+* **Output:** Predicted action label with confidence scores and an annotated preview
+* **APIs:** `/health`, `/labels`, `/predict_image` (single image); `/predict` also accepts sequences but routes to single-image flow when only one frame is provided
+
+---
+
+## Model Files (Required)
+
+Download the pretrained model files from Google Drive and place them **exactly** in the `backend/weights/` folder.
+
+**Google Drive link:**
+👉 [https://drive.google.com/drive/folders/11Op-fIIRXtikAxVtSakA9YMC0fiTFmeY?usp=sharing](https://drive.google.com/drive/folders/11Op-fIIRXtikAxVtSakA9YMC0fiTFmeY?usp=sharing)
+
+### Files to download
+
+* `best_cnn_lstm.pth` – Trained Stanford-40 weights (`state_dict`)
+* `best_cnn_lstm_scripted.pt` – TorchScript export (optional, kept for reference)
+* `classes.txt` – Class names (one per line)
+* `class_index.json` – Same class list in JSON format
+
+### Expected directory structure
+
+```
+backend/
+└── weights/
+    ├── best_cnn_lstm.pth
+    ├── best_cnn_lstm_scripted.pt
+    ├── classes.txt
+    └── class_index.json
+```
+
+> ⚠️ The backend will fail to start if `best_cnn_lstm.pth` or the class files are missing or placed elsewhere.
+
+---
 
 ## Project Structure
 
 ```
 +-- backend/
-�   +-- app/
-�   �   +-- main.py          # FastAPI endpoints
-�   �   +-- model.py         # ResNet50+LSTM model wrapper
-�   +-- weights/
-�   �   +-- best_cnn_lstm.pth         # Trained Stanford-40 weights (state_dict)
-�   �   +-- best_cnn_lstm_scripted.pt # TorchScript export (kept for reference)
-�   �   +-- classes.txt               # Class names (one per line)
-�   �   +-- class_index.json          # Same classes as JSON array
-�   +-- requirements.txt
+│   +-- app/
+│   │   +-- main.py          # FastAPI endpoints
+│   │   +-- model.py         # ResNet50+LSTM model wrapper
+│   +-- weights/
+│   │   +-- best_cnn_lstm.pth         # Trained Stanford-40 weights
+│   │   +-- best_cnn_lstm_scripted.pt # TorchScript export (reference)
+│   │   +-- classes.txt               # Class names
+│   │   +-- class_index.json          # Class names (JSON)
+│   +-- requirements.txt
 +-- frontend/
-�   +-- index.html
-�   +-- script.js
-�   +-- style.css
+│   +-- index.html
+│   +-- script.js
+│   +-- style.css
 +-- stanford_40_training.py   # Reference training script (ResNet50 + LSTM)
 +-- README.md
 ```
+
+---
 
 ## Setup
 
@@ -38,10 +71,12 @@ Image-based action recognition using a ResNet50 + LSTM model trained on the **St
 ```bash
 cd backend
 python -m venv .venv
-.venv\Scripts\activate
+.venv\Scripts\activate   # Windows
+# source .venv/bin/activate  # Linux / macOS
+
 pip install -r requirements.txt
 
-# run API
+# Run API
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
@@ -52,35 +87,45 @@ cd frontend
 python -m http.server 5173
 ```
 
-Open http://localhost:5173 and set API base to http://localhost:8000.
+Open **[http://localhost:5173](http://localhost:5173)** and set the API base to **[http://localhost:8000](http://localhost:8000)**.
+
+---
 
 ## Usage
 
-1. Start backend and frontend.
-2. In the web UI, pick the API base (default http://localhost:8000).
-3. Upload an image (common formats work). The app resizes to 224x224 and normalizes with ImageNet stats.
-4. View the top prediction, confidence, and the annotated preview.
+1. Start the backend and frontend.
+2. In the web UI, confirm the API base URL.
+3. Upload an image (JPG/PNG/etc.). The app resizes it to 224×224 and applies ImageNet normalization.
+4. View the top predicted action, confidence score, and annotated preview.
+
+---
 
 ## API Endpoints
 
-- `GET /health` � health check
-- `GET /labels` � list of the 40 Stanford-40 action classes
-- `POST /predict_image` � multipart form with one image file (`file` field); returns label, score, per-class scores, and a base64 preview
-- `POST /predict` � accepts sequences; when a single frame is provided, it uses the same single-image path
+* `GET /health` – Health check
+* `GET /labels` – List of the 40 Stanford-40 action classes
+* `POST /predict_image` – Multipart form upload (`file` field)
+
+  * Returns: predicted label, confidence, per-class scores, base64 preview image
+* `POST /predict` – Accepts sequences; single-frame input is routed to the same image pipeline
+
+---
 
 ## Model Details
 
-- **Encoder:** ResNet50 pretrained on ImageNet, all layers frozen, final FC replaced with Identity
-- **LSTM:** input 2048, hidden 512, batch_first=True
-- **Head:** Linear(512 -> 40)
-- **Preprocessing:** Resize to 224x224, convert to RGB, divide by 255, ImageNet mean/std normalization
-- **Weights:** Loaded from `backend/weights/best_cnn_lstm.pth` by default (override with `MODEL_WEIGHTS_PATH` if needed)
+* **Encoder:** ResNet50 pretrained on ImageNet, all layers frozen, final FC replaced with `Identity`
+* **LSTM:** Input size 2048, hidden size 512, `batch_first=True`
+* **Classifier Head:** Linear(512 → 40)
+* **Preprocessing:**
 
-## Files of Interest
+  * Resize to 224×224
+  * Convert to RGB
+  * Normalize using ImageNet mean/std
+* **Weights loading:**
 
-- Backend model + loader: `backend/app/model.py`
-- API definitions: `backend/app/main.py`
-- Weights and class names: `backend/weights`
-- Frontend UI: `frontend/index.html`, `frontend/script.js`
-- Training reference: `stanford_40_training.py`
+  * Default: `backend/weights/best_cnn_lstm.pth`
+  * Override using `MODEL_WEIGHTS_PATH` environment variable if needed
+
+---
+
 
